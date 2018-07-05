@@ -27,3 +27,5 @@ Currently the list is short:
 - Does not support IPv6 :sob:
 - Has certificate issues with TLS, as domain names are replaced by IPs
 - more
+
+Please [report issues](https://github.com/0bmxa/hotspot_login/issues/new), if you find any!
