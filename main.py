@@ -9,7 +9,7 @@ import re
 
 class LoginStrategyType(object):
     def name(self): raise NotImplementedError()
-    def checkPreconditions(self): return (True, None) # (success, message)
+    def check_preconditions(self): return (True, None) # (success, message)
     def login(self): raise NotImplementedError()
     def status(self): raise NotImplementedError()
     def logout(self): raise NotImplementedError()
@@ -21,33 +21,33 @@ class MeinHotspotLoginStrategy(LoginStrategyType):
         return "MeinHotspot"
 
     def login(self):
-        macAddress = tools.getMACAddress()
+        mac_address = tools.get_MAC_address()
         payload = {
-            'username': macAddress,
-            'password': macAddress,
-            'mac': macAddress
+            'username': mac_address,
+            'password': mac_address,
+            'mac': mac_address
         }
 
         headers = {'content-type': "application/x-www-form-urlencoded"}
 
         # Form request body
-        encodedPayload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
-        requestBody = "&".join('{}={}'.format(key, value) for (key, value) in encodedPayload.items())
+        encoded_payload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
+        request_body = "&".join('{}={}'.format(key, value) for (key, value) in encoded_payload.items())
 
         path = "/login"
         method = "POST"
-        (_, _, result) = tools.sendHTTPSRequest(method, self.host, path, headers, requestBody)
+        (_, _, result) = tools.send_HTTPS_request(method, self.host, path, headers, request_body)
 
         # If req failed, show response and stop here
         if 'Sie wurden soeben auf dem Hotspot eingeloggt' in result:
             print('Logged in.')
             return True
 
-        errorMessages = [
+        error_messages = [
             'Your maximum daily usage time has been reached',
             'RADIUS server is not responding'
         ]
-        for message in errorMessages:
+        for message in error_messages:
             if message in result:
                 print(message)
                 return False
@@ -61,13 +61,13 @@ class MeinHotspotLoginStrategy(LoginStrategyType):
 
         path = "/mhstatus.html"
         method = "GET"
-        (_, _, result) = tools.sendHTTPSRequest(method, self.host, path, headers, None)
+        (_, _, result) = tools.send_HTTPS_request(method, self.host, path, headers, None)
 
         if not '<table' in result:
             print("ERROR: Malformed status page")
             return
 
-        tools.printHTMLTable(result)
+        tools.print_HTML_table(result)
 
 
 class BooksAndBagelsLoginStrategy(MeinHotspotLoginStrategy):
@@ -92,15 +92,15 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
     def login(self):
         # Get CSRF token and cookie
         print('1. Getting tokens')
-        (_, head, body) = tools.sendHTTPRequest('GET', self.host, '/de/', None, None)
+        (_, head, body) = tools.send_HTTP_request('GET', self.host, '/de/', None, None)
         token = body.split('name="CSRFToken" value="')[1]
         token = token.split('"')[0]
         cookies = [value for (key, value) in head if key == 'Set-Cookie']
         cookie = cookies[0].split(';')[0]
 
-        foundToken  = ' Token ✔'  if (len(token) > 0) else ''
-        foundCookie = ' Cookie ✔' if (len(cookie) > 0) else ''
-        print('Found:%s%s' % (foundToken, foundCookie))
+        found_token  = ' Token ✔'  if (len(token) > 0) else ''
+        found_cookie = ' Cookie ✔' if (len(cookie) > 0) else ''
+        print('Found:%s%s' % (found_token, found_cookie))
 
         headers = {
             'Content-Type': "application/x-www-form-urlencoded",
@@ -113,14 +113,14 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
             'CSRFToken': token,
             'connect': '',
         }
-        encodedPayload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
-        requestBody = "&".join('{}={}'.format(key, value) for (key, value) in encodedPayload.items())
+        encoded_payload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
+        request_body = "&".join('{}={}'.format(key, value) for (key, value) in encoded_payload.items())
 
         print('2. Logging in')
-        tools.sendHTTPRequest('POST', self.host, '/de/', headers, requestBody)
+        tools.send_HTTP_request('POST', self.host, '/de/', headers, request_body)
 
         print('3. Verifying')
-        (_, _, body) = tools.sendHTTPRequest('GET', self.host, '/de/', None, None)
+        (_, _, body) = tools.send_HTTP_request('GET', self.host, '/de/', None, None)
 
         # Check if confirmation is in result
         if 'Sie sind jetzt online!' in body:
@@ -131,7 +131,7 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
 
     def status(self):
         path = '/usage_info/'
-        (_, _, result) = tools.sendHTTPRequest('GET', self.host, path, None, None)
+        (_, _, result) = tools.send_HTTP_request('GET', self.host, path, None, None)
 
         percentage = result * 100
         print("Usage %f percent" % percentage)
@@ -140,15 +140,15 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
     def logout(self):
         # Get CSRF token and cookie
         print('1. Getting tokens')
-        (_, head, body) = tools.sendHTTPRequest('GET', self.host, '/de/', None, None)
+        (_, head, body) = tools.send_HTTP_request('GET', self.host, '/de/', None, None)
         token = body.split('name="CSRFToken" value="')[1]
         token = token.split('"')[0]
         cookies = [value for (key, value) in head if key == 'Set-Cookie']
         cookie = cookies[0].split(';')[0]
 
-        foundToken  = ' Token ✔'  if (len(token) > 0) else ''
-        foundCookie = ' Cookie ✔' if (len(cookie) > 0) else ''
-        print('Found:%s%s' % (foundToken, foundCookie))
+        found_token  = ' Token ✔'  if (len(token) > 0) else ''
+        found_cookie = ' Cookie ✔' if (len(cookie) > 0) else ''
+        print('Found:%s%s' % (found_token, found_cookie))
 
         headers = {
             'Content-Type': "application/x-www-form-urlencoded",
@@ -160,14 +160,14 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
             'logout': 'true',
             'CSRFToken': token,
         }
-        encodedPayload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
-        requestBody = "&".join('{}={}'.format(key, value) for (key, value) in encodedPayload.items())
+        encoded_payload = dict([(urllib.parse.quote_plus(key), urllib.parse.quote_plus(value)) for (key, value) in payload.items()])
+        request_body = "&".join('{}={}'.format(key, value) for (key, value) in encoded_payload.items())
 
         print('2. Logging in')
-        tools.sendHTTPRequest('POST', self.host, '/de/', headers, requestBody)
+        tools.send_HTTP_request('POST', self.host, '/de/', headers, request_body)
 
         print('3. Verifying')
-        (_, _, body) = tools.sendHTTPRequest('GET', self.host, '/de/', None, None)
+        (_, _, body) = tools.send_HTTP_request('GET', self.host, '/de/', None, None)
 
         # Check if confirmation is in result
         if 'Sie sind jetzt online!' in body:
@@ -185,16 +185,16 @@ class DefaultLoginStrategy(LoginStrategyType):
         print("1. Looking for a captive portal")
 
         headers = { 'host': 'neverssl.com' }
-        hostIP = '13.32.158.44'
-        (status, head, body) = tools.sendHTTPRequest('GET', hostIP, '/', headers, None)
+        host_IP = '13.32.158.44'
+        (status, head, body) = tools.send_HTTP_request('GET', host_IP, '/', headers, None)
         location = [field[1] for field in head if field[0] == 'Location']
         if len(location) < 1:
             print("No captive portal found.")
             return True
 
         # Found a captive portal
-        captivePortalURL = location[0]
-        print("Found captive portal at:", captivePortalURL)
+        captive_portal_URL = location[0]
+        print("Found captive portal at:", captive_portal_URL)
 
         captive_portal_IP = None
 
@@ -207,10 +207,10 @@ class DefaultLoginStrategy(LoginStrategyType):
         # Check if hostname is an IP already, if not, resolve
         if re.search('[^0-9\.]', captive_portal_hostname):
             # Get default gateway
-            default_gateway = tools.getGateway()
+            default_gateway = tools.get_gateway()
 
             # Get portal IP
-            captive_portal_IP = tools.getIPForDomain(captive_portal_hostname, default_gateway)
+            captive_portal_IP = tools.get_IP_for_domain(captive_portal_hostname, default_gateway)
             print("Replaced %s with %s" % (captive_portal_hostname, captive_portal_IP))
 
         else:
@@ -221,7 +221,7 @@ class DefaultLoginStrategy(LoginStrategyType):
         secure = False #(url_parts.scheme == 'https')
         path = url_parts.geturl().split(captive_portal_hostname)[1]
         headers = { 'host': captive_portal_hostname }
-        (_, _, body) = tools.sendHTTPRequest('GET', captive_portal_IP, path, headers, None, secure)
+        (_, _, body) = tools.send_HTTP_request('GET', captive_portal_IP, path, headers, None, secure)
         
 
         # Print it fancy
@@ -254,11 +254,11 @@ class DefaultLoginStrategy(LoginStrategyType):
 class HotspotLogin(object):
     def main(self):
 
-        tools.getMACAddress()
+        tools.get_MAC_address()
 
         # Get SSID
         print('%s[SSID]%s' % (Fore.YELLOW, Fore.RESET))
-        ssid = tools.getSSID()
+        ssid = tools.get_SSID()
         if not ssid:
             print('Not connected to WiFi')
             return
@@ -266,22 +266,22 @@ class HotspotLogin(object):
 
         # Get login strategy
         print('\n%s[Strategy]%s' % (Fore.YELLOW, Fore.RESET))
-        strategyClass = self.strategyForSSID(ssid)
-        strategy = strategyClass()
+        strategy_class = self.strategy_for_SSID(ssid)
+        strategy = strategy_class()
         print("%s strategy" % strategy.name())
 
         # Check Preconditions
-        (preconditionsSuccess, preconditionsMessage) = strategy.checkPreconditions()
-        if preconditionsMessage:
+        (preconditions_success, preconditions_message) = strategy.check_preconditions()
+        if preconditions_message:
             print('\n%s[Preconditions]%s' % (Fore.YELLOW, Fore.RESET))
-            print(preconditionsMessage)
-        if not preconditionsSuccess:
+            print(preconditions_message)
+        if not preconditions_success:
             return
 
         # Login
         print('\n%s[Login]%s' % (Fore.YELLOW, Fore.RESET))
-        loginSuccess = strategy.login()
-        if not loginSuccess:
+        login_success = strategy.login()
+        if not login_success:
             print('Login was not successful.')
             return
 
@@ -291,7 +291,7 @@ class HotspotLogin(object):
 
         # TODO: connect to VPN
 
-    def strategyForSSID(self, ssid):
+    def strategy_for_SSID(self, ssid):
         strategies = {
             "books and bagels" : BooksAndBagelsLoginStrategy,
             "Commonground" :     MeinHotspotLoginStrategy,
@@ -304,10 +304,10 @@ class HotspotLogin(object):
 
 
 class Tools:
-    def sendHTTPSRequest(self, method, host, path, headers, body):
-        return self.sendHTTPRequest(method, host, path, headers, body, True)
+    def send_HTTPS_request(self, method, host, path, headers, body):
+        return self.send_HTTP_request(method, host, path, headers, body, True)
 
-    def sendHTTPRequest(self, method, host, path, headers, body, secure=False):
+    def send_HTTP_request(self, method, host, path, headers, body, secure=False):
         # Send request
         print('Connecting...\r', end='')
         # try:
@@ -338,12 +338,12 @@ class Tools:
     def _exec(self, command):
         tokens = command.split(' ')
         process = subprocess.Popen(tokens, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdoutBytes, stderrBytes) = process.communicate()
-        stdout = stdoutBytes.decode('utf-8')
-        stderr = stderrBytes.decode('utf-8')
+        (stdout_bytes, stderr_bytes) = process.communicate()
+        stdout = stdout_bytes.decode('utf-8')
+        stderr = stderr_bytes.decode('utf-8')
         return (stdout, stderr)
 
-    def getSSID(self):
+    def get_SSID(self):
         (stdout, _) = self._exec("/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport -I")
         result = stdout.split("\n")
         SSIDLines = [line for line in result if " SSID: " in line]
@@ -353,7 +353,7 @@ class Tools:
         SSID = SSIDLines[0].split(': ')[1]
         return SSID
 
-    def getMACAddress(self):
+    def get_MAC_address(self):
         interface = 'en0'
         (stdout, _) = self._exec("ifconfig %s ether" % interface)
         result = stdout.split("\n")
@@ -364,18 +364,18 @@ class Tools:
         MAC = MACLines[0].split('ether ')[1]
         return MAC
     
-    def getGateway(self, destination='default'):
+    def get_gateway(self, destination='default'):
         (stdout, _) = self._exec("route -n get %s" % destination)
         result = stdout.split("\n")
-        gatewayLines = [line for line in result if 'gateway: ' in line]
-        if len(gatewayLines) < 1:
+        gateway_lines = [line for line in result if 'gateway: ' in line]
+        if len(gateway_lines) < 1:
             return None
 
-        gateway = gatewayLines[0].split('gateway: ')[1]
+        gateway = gateway_lines[0].split('gateway: ')[1]
         return gateway
     
-    def getIPForDomain(self, domain, dnsServer):
-        (stdout, _) = self._exec("dig -4 -tA +nostats +nocomments +nocmd @%s %s" % (dnsServer, domain))
+    def get_IP_for_domain(self, domain, dns_server):
+        (stdout, _) = self._exec("dig -4 -tA +nostats +nocomments +nocmd @%s %s" % (dns_server, domain))
         result = stdout.split("\n")
         
         # Remove commented out lines
@@ -390,67 +390,67 @@ class Tools:
     
     
 
-    def printHTMLTable(self, html):
-        tableContents = html
-        tableContents = self.regexAfter('<\s*table[^>]*>', tableContents)
-        tableContents = self.regexBefore('</\s*table\s*>', tableContents)
+    def print_HTML_table(self, html):
+        table_contents = html
+        table_contents = self.regex_after('<\s*table[^>]*>', table_contents)
+        table_contents = self.regex_before('</\s*table\s*>', table_contents)
 
-        tableData = []
+        table_data = []
 
-        # Loop over '_tableContentsString' until no `<tr>`s are left
-        _tableContentsString = self.regexAfter('<\s*tr[^>]*>', tableContents)
-        while _tableContentsString:
+        # Loop over '_table_contents_string' until no `<tr>`s are left
+        _table_contents_string = self.regex_after('<\s*tr[^>]*>', table_contents)
+        while _table_contents_string:
             # Finds the ending `</tr>`
-            _rowString = self.regexBefore('</\s*tr\s*>', _tableContentsString)
+            _row_string = self.regex_before('</\s*tr\s*>', _table_contents_string)
 
             # Empty array to store `col`s
-            rowData = []
+            row_data = []
 
             # (Same logic as outer loop)
-            # Loop over '_rowString' until no `<td>`s are left
-            if _rowString:
-                _rowString = self.regexAfter('<\s*td[^>]*>', _rowString)
-                while _rowString:
-                    col = self.regexBefore('</\s*td\s*>', _rowString)
+            # Loop over '_row_string' until no `<td>`s are left
+            if _row_string:
+                _row_string = self.regex_after('<\s*td[^>]*>', _row_string)
+                while _row_string:
+                    col = self.regex_before('</\s*td\s*>', _row_string)
                     col = re.sub('<\s*/?[A-z]+[^>]*>', '', col) # Remove all tags
-                    rowData.append(col)
-                    _rowString = self.regexAfter('<\s*td[^>]*>', _rowString)
-            del _rowString
+                    row_data.append(col)
+                    _row_string = self.regex_after('<\s*td[^>]*>', _row_string)
+            del _row_string
 
             # Add row data to table
-            tableData.append(rowData)
+            table_data.append(row_data)
 
             # Find next occurence and start over
-            _tableContentsString = self.regexAfter('<\s*tr[^>]*>', _tableContentsString)
+            _table_contents_string = self.regex_after('<\s*tr[^>]*>', _table_contents_string)
         
         # Get rid of the temp var
-        del _tableContentsString
+        del _table_contents_string
 
 
         # Determine number of columns (i.e. longest row)
-        numberOfColumns = max([len(row) for row in tableData])
+        number_of_columns = max([len(row) for row in table_data])
 
         # Determine longest columns of all rows
-        columnLengths = [0] * numberOfColumns
-        for row in tableData:
-            _colLengths = [len(col) for col in row]
-            for (i, colLen) in enumerate(_colLengths):
-                columnLengths[i] = max(columnLengths[i], colLen)
+        column_lengths = [0] * number_of_columns
+        for row in table_data:
+            _col_lengths = [len(col) for col in row]
+            for (i, col_len) in enumerate(_col_lengths):
+                column_lengths[i] = max(column_lengths[i], col_len)
 
         # Print table!
-        for row in tableData:
-            rowString = ''
-            paddedRow = [col.ljust(columnLengths[i]) for (i, col) in enumerate(row)]
-            print(" | ".join(paddedRow))
+        for row in table_data:
+            row_string = ''
+            padded_row = [col.ljust(column_lengths[i]) for (i, col) in enumerate(row)]
+            print(" | ".join(padded_row))
             
     
-    def regexBefore(self, regex, input):
+    def regex_before(self, regex, input):
         match = re.search(regex, input)
         if not match: return None
         (start, end) = match.span(0)
         return input[:start]
 
-    def regexAfter(self, regex, input):
+    def regex_after(self, regex, input):
         match = re.search(regex, input)
         if not match: return None
         (start, end) = match.span(0)
