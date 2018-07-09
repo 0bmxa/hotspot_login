@@ -202,7 +202,7 @@ class DefaultLoginStrategy(LoginStrategyType):
         print('2. Replacing domain name with IP')
 
         url_parts = urllib.parse.urlparse(captive_portal_URL)
-        captive_portal_hostname = url_parts.netloc
+        captive_portal_hostname = url_parts.hostname
 
         # Check if hostname is an IP already, if not, resolve
         if re.search('[^0-9\.]', captive_portal_hostname):
