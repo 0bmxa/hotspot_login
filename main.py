@@ -54,7 +54,7 @@ class MeinHotspotLoginStrategy(LoginStrategyType):
                 print(message)
                 return False
 
-        print(result)
+        debugprint(result)
         return False
 
 
@@ -102,7 +102,7 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
 
         found_token  = ' Token ✔'  if (len(token) > 0) else ''
         found_cookie = ' Cookie ✔' if (len(cookie) > 0) else ''
-        print('Found:%s%s' % (found_token, found_cookie))
+        debugprint('Found:%s%s' % (found_token, found_cookie))
 
         headers = {
             'Content-Type': "application/x-www-form-urlencoded",
@@ -150,7 +150,7 @@ class DeutscheBahnICELoginStrategy(LoginStrategyType):
 
         found_token  = ' Token ✔'  if (len(token) > 0) else ''
         found_cookie = ' Cookie ✔' if (len(cookie) > 0) else ''
-        print('Found:%s%s' % (found_token, found_cookie))
+        debugprint('Found:%s%s' % (found_token, found_cookie))
 
         headers = {
             'Content-Type': "application/x-www-form-urlencoded",
@@ -196,7 +196,7 @@ class DefaultLoginStrategy(LoginStrategyType):
 
         # Found a captive portal
         captive_portal_URL = location[0]
-        print("Found captive portal at:", captive_portal_URL)
+        debugprint("Found captive portal at: %s" % captive_portal_URL)
 
         captive_portal_IP = None
 
@@ -205,7 +205,7 @@ class DefaultLoginStrategy(LoginStrategyType):
 
         real_hostname = urllib.parse.urlparse(captive_portal_URL).hostname
         captive_portal_URL = tools.check_and_replace_domain(captive_portal_URL)
-        print('URL is now: %s' % captive_portal_URL)
+        debugprint('URL is now: %s' % captive_portal_URL)
 
         # Get the captive portal HTML
         secure = False #(url_parts.scheme == 'https')
@@ -397,8 +397,8 @@ class Tools:
 
         new_URL = url_parts.geturl()
 
-        print("Replaced '%s' with '%s'" % (hostname, IP))
-        print("URL is now: %s" % new_URL)
+        debugprint("Replaced '%s' with '%s'" % (hostname, IP))
+        debugprint("URL is now: %s" % new_URL)
 
         return new_URL
 
@@ -492,6 +492,9 @@ class Tools:
         if not match: return None
         (start, end) = match.span(0)
         return input[end:]
+
+def debugprint(message):
+    print('  %s%s%s' % (Fore.LIGHTBLACK_EX, message, Fore.RESET))
 
 tools = None
 if __name__ == '__main__':
