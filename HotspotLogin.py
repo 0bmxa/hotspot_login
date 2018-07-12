@@ -11,10 +11,7 @@ from DeutscheBahnICELoginStrategy import DeutscheBahnICELoginStrategy
 tools = Tools()
 
 class HotspotLogin(object):
-    def main(self):
-
-        tools.get_MAC_address()
-
+    def __init__(self):
         # Get SSID
         print('%s[SSID]%s' % (Fore.YELLOW, Fore.RESET))
         ssid = tools.get_SSID()
@@ -50,13 +47,13 @@ class HotspotLogin(object):
 
         # TODO: connect to VPN
 
-    def strategy_for_SSID(self, ssid):
+    def strategy_for_SSID(self, SSID):
         strategies = {
             "books and bagels" : BooksAndBagelsLoginStrategy,
             "Commonground" :     MeinHotspotLoginStrategy,
             "WIFIonICE" :        DeutscheBahnICELoginStrategy,
         }
-        if ssid in strategies:
-            return strategies[ssid]
+        if SSID in strategies:
+            return strategies[SSID]
 
         return DefaultLoginStrategy
