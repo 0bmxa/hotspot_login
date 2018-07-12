@@ -8,13 +8,19 @@ from DeutscheBahnICELoginStrategy import DeutscheBahnICELoginStrategy
 
 
 # FIXME: Not cool, I guess
-tools = Tools()
+TOOLS = Tools()
 
 class HotspotLogin(object):
+    strategies = {
+        "books and bagels" : BooksAndBagelsLoginStrategy,
+        "Commonground" :     MeinHotspotLoginStrategy,
+        "WIFIonICE" :        DeutscheBahnICELoginStrategy,
+    }
+
     def __init__(self):
         # Get SSID
         print('%s[SSID]%s' % (Fore.YELLOW, Fore.RESET))
-        ssid = tools.get_SSID()
+        ssid = TOOLS.get_SSID()
         if not ssid:
             print('Not connected to WiFi')
             return
@@ -22,7 +28,7 @@ class HotspotLogin(object):
 
         # Get login strategy
         print('\n%s[Strategy]%s' % (Fore.YELLOW, Fore.RESET))
-        strategy_class = self.strategy_for_SSID(ssid)
+        strategy_class = self.strategy_for_ssid(ssid)
         strategy = strategy_class()
         print("%s strategy" % strategy.name())
 
@@ -47,13 +53,8 @@ class HotspotLogin(object):
 
         # TODO: connect to VPN
 
-    def strategy_for_SSID(self, SSID):
-        strategies = {
-            "books and bagels" : BooksAndBagelsLoginStrategy,
-            "Commonground" :     MeinHotspotLoginStrategy,
-            "WIFIonICE" :        DeutscheBahnICELoginStrategy,
-        }
-        if SSID in strategies:
-            return strategies[SSID]
+    def strategy_for_ssid(self, ssid):
+        if ssid in self.strategies:
+            return self.strategies[ssid]
 
         return DefaultLoginStrategy

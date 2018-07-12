@@ -7,7 +7,7 @@ class BooksAndBagelsLoginStrategy(MeinHotspotLoginStrategy):
     def name(self):
         return "BooksAndBagels"
 
-    def checkPreconditions(self):
+    def check_preconditions(self):
         # Fine Bagels Hotspot on weekends:
         # Saturday only from 17:00, Sunday from 19:00 on
         now = datetime.datetime.now()
