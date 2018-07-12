@@ -6,6 +6,8 @@ import datetime
 import subprocess
 from colorama import Fore
 import re
+import socket
+
 
 class LoginStrategyType(object):
     def name(self): raise NotImplementedError()
@@ -201,30 +203,30 @@ class DefaultLoginStrategy(LoginStrategyType):
         # Replace (potential) domain name with IP, because I'm using my own DNS
         print('2. Replacing domain name with IP')
 
-        url_parts = urllib.parse.urlparse(captive_portal_URL)
-        captive_portal_hostname = url_parts.hostname
+        real_hostname = urllib.parse.urlparse(captive_portal_URL).hostname
+        captive_portal_URL = tools.check_and_replace_domain(captive_portal_URL)
+        print('URL is now: %s' % captive_portal_URL)
 
-        # Check if hostname is an IP already, if not, resolve
-        if re.search('[^0-9\.]', captive_portal_hostname):
-            # Get default gateway
-            default_gateway = tools.get_gateway()
-
-            # Get portal IP
-            captive_portal_IP = tools.get_IP_for_domain(captive_portal_hostname, default_gateway)
-            print("Replaced %s with %s" % (captive_portal_hostname, captive_portal_IP))
-
-        else:
-            print("%s is already an IP" % captive_portal_IP)
-            captive_portal_IP = captive_portal_hostname
-        
         # Get the captive portal HTML
         secure = False #(url_parts.scheme == 'https')
-        path = url_parts.geturl().split(captive_portal_hostname)[1]
-        headers = { 'host': captive_portal_hostname }
-        (_, _, body) = tools.send_HTTP_request('GET', captive_portal_IP, path, headers, None, secure)
+        url_parts = urllib.parse.urlparse(captive_portal_URL)
+        captive_portal_IP = url_parts.hostname
+        path = url_parts.geturl().split(captive_portal_IP)[1]
+        headers = { 'host': real_hostname }
+        (_, head, body) = tools.send_HTTP_request('GET', captive_portal_IP, path, headers, None, secure)
         
+        # Check if a redirect is requested
+        location = [field[1] for field in head if field[0] == 'Location']
+        if len(location) > 0:
+            print('  Portal wants to redirect to:\n  %s%s%s' % (Fore.YELLOW, location[0], Fore.RESET))
+            print('Redirects not yet supported.')
+            return
 
+        
+        #
         # Print it fancy
+        #
+
         line = '=' * 80
         print('%s%s\nSTART CAPTIVE PORTAL HTML\n%s%s' % (Fore.RED, line, line, Fore.RESET))
 
@@ -332,7 +334,7 @@ class Tools:
         data = response.read()
         body = data.decode("utf-8")
 
-        print('             \r', end='')
+        print('             \r', end='') # Erase previous 'Connecting...' output
         return (status, head, body)
 
     def _exec(self, command):
@@ -373,7 +375,41 @@ class Tools:
 
         gateway = gateway_lines[0].split('gateway: ')[1]
         return gateway
-    
+
+    def check_and_replace_domain(self, URL):
+        url_parts = urllib.parse.urlparse(URL)
+        hostname = url_parts.hostname
+
+        # Check if hostname is an IP already, if not, resolve
+        if self.is_IP(hostname):
+            return URL
+        
+        # Get default gateway (which is hopefully a DNS server)
+        default_gateway = tools.get_gateway()
+
+        # Get portal IP
+        IP = tools.get_IP_for_domain(hostname, default_gateway)
+
+        if not IP:
+            return URL
+
+        url_parts._replace('hostname', IP)
+
+        new_URL = url_parts.geturl()
+
+        print("Replaced '%s' with '%s'" % (hostname, IP))
+        print("URL is now: %s" % new_URL)
+
+        return new_URL
+
+    def is_IP(self, host):
+        try:
+            socket.inet_aton(host)
+            return True
+
+        except socket.error:
+            return False
+
     def get_IP_for_domain(self, domain, dns_server):
         (stdout, _) = self._exec("dig -4 -tA +nostats +nocomments +nocmd @%s %s" % (dns_server, domain))
         result = stdout.split("\n")
@@ -383,6 +419,7 @@ class Tools:
 
         IP_lines = [line for line in result if 'A\t' in line]
         if len(IP_lines) < 1:
+            print("ERROR: Couldn't resolve domain '%s'." % domain)
             return None
 
         IP = IP_lines[0].split('A\t')[1]
