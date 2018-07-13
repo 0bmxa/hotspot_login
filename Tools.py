@@ -96,7 +96,12 @@ class Tools:
         if not IP:
             return URL
 
-        url_parts._replace('hostname', IP)
+        port = url_parts.port
+        new_netloc = '%s:%d' % (IP, port) if port not in [80, 443] else IP
+        debugprint(new_netloc)
+        debugprint(url_parts)
+        url_parts._replace(netloc=new_netloc)
+        debugprint(url_parts)
 
         new_URL = url_parts.geturl()
 
@@ -114,7 +119,9 @@ class Tools:
             return False
 
     def get_IP_for_domain(self, domain, dns_server):
-        (stdout, _) = self._exec("dig -4 -tA +nostats +nocomments +nocmd @%s %s" % (dns_server, domain))
+        command = "dig -4 -tA +nostats +nocomments +nocmd @%s %s" % (dns_server, domain)
+        # debugprint('Executing: %s' % command)
+        (stdout, _) = self._exec(command)
         result = stdout.split("\n")
         
         # Remove commented out lines
