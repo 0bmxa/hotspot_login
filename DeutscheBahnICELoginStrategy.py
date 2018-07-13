@@ -1,5 +1,5 @@
 from LoginStrategyType import LoginStrategyType
-from Tools import Tools
+from Tools import *
 
 # FIXME: Not cool, I guess
 tools = Tools()

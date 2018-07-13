@@ -1,6 +1,8 @@
-import subprocess
-import http.client
 from colorama import Fore
+import http.client
+import socket
+import subprocess
+import urllib
 
 
 def debugprint(message):
@@ -86,10 +88,10 @@ class Tools:
             return URL
         
         # Get default gateway (which is hopefully a DNS server)
-        default_gateway = tools.get_gateway()
+        default_gateway = self.get_gateway()
 
         # Get portal IP
-        IP = tools.get_IP_for_domain(hostname, default_gateway)
+        IP = self.get_IP_for_domain(hostname, default_gateway)
 
         if not IP:
             return URL

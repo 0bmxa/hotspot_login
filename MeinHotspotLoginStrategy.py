@@ -1,8 +1,7 @@
 import urllib
 
 from LoginStrategyType import LoginStrategyType
-from Tools import Tools
-from Tools import debugprint
+from Tools import *
 
 
 
