@@ -1,5 +1,6 @@
 from colorama import Fore
 import http.client
+import re
 import socket
 import subprocess
 import urllib
@@ -96,7 +97,7 @@ class Tools:
         if not IP:
             return URL
 
-        port = url_parts.port
+        port = url_parts.port or 80
         new_netloc = '%s:%d' % (IP, port) if port not in [80, 443] else IP
         debugprint(new_netloc)
         debugprint(url_parts)
@@ -139,16 +140,16 @@ class Tools:
 
     def print_HTML_table(self, html):
         table_contents = html
-        table_contents = self.regex_after('<\s*table[^>]*>', table_contents)
-        table_contents = self.regex_before('</\s*table\s*>', table_contents)
+        table_contents = self.regex_after(r'<\s*table[^>]*>', table_contents)
+        table_contents = self.regex_before(r'</\s*table\s*>', table_contents)
 
         table_data = []
 
         # Loop over '_table_contents_string' until no `<tr>`s are left
-        _table_contents_string = self.regex_after('<\s*tr[^>]*>', table_contents)
+        _table_contents_string = self.regex_after(r'<\s*tr[^>]*>', table_contents)
         while _table_contents_string:
             # Finds the ending `</tr>`
-            _row_string = self.regex_before('</\s*tr\s*>', _table_contents_string)
+            _row_string = self.regex_before(r'</\s*tr\s*>', _table_contents_string)
 
             # Empty array to store `col`s
             row_data = []
@@ -156,19 +157,19 @@ class Tools:
             # (Same logic as outer loop)
             # Loop over '_row_string' until no `<td>`s are left
             if _row_string:
-                _row_string = self.regex_after('<\s*td[^>]*>', _row_string)
+                _row_string = self.regex_after(r'<\s*td[^>]*>', _row_string)
                 while _row_string:
-                    col = self.regex_before('</\s*td\s*>', _row_string)
-                    col = re.sub('<\s*/?[A-z]+[^>]*>', '', col) # Remove all tags
+                    col = self.regex_before(r'</\s*td\s*>', _row_string)
+                    col = re.sub(r'<\s*/?[A-z]+[^>]*>', '', col) # Remove all tags
                     row_data.append(col)
-                    _row_string = self.regex_after('<\s*td[^>]*>', _row_string)
+                    _row_string = self.regex_after(r'<\s*td[^>]*>', _row_string)
             del _row_string
 
             # Add row data to table
             table_data.append(row_data)
 
             # Find next occurence and start over
-            _table_contents_string = self.regex_after('<\s*tr[^>]*>', _table_contents_string)
+            _table_contents_string = self.regex_after(r'<\s*tr[^>]*>', _table_contents_string)
         
         # Get rid of the temp var
         del _table_contents_string

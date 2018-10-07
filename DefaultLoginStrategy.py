@@ -2,6 +2,7 @@ import urllib
 
 from LoginStrategyType import LoginStrategyType
 from Tools import *
+import re as regex
 
 
 # FIXME: Not cool, I guess
@@ -60,11 +61,11 @@ class DefaultLoginStrategy(LoginStrategyType):
         print('%s%s\nSTART CAPTIVE PORTAL HTML\n%s%s' % (Fore.RED, line, line, Fore.RESET))
 
         # Find & highlight a form
-        form_start = re.search('<\s*form[^>]*>', body)
+        form_start = regex.search('<\s*form[^>]*>', body)
         if form_start:
             (form_start_index, _) = form_start.span(0)
 
-            form_end = re.search('</\s*form\s*>', body)
+            form_end = regex.search('</\s*form\s*>', body)
             (_, form_end_index) = form_end.span(0)
             
             before_form = body[:form_start_index]

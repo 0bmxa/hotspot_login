@@ -1,7 +1,8 @@
 import urllib
 
 from LoginStrategyType import LoginStrategyType
-from Tools import *
+from Tools import Tools,debugprint
+from colorama import Fore
 
 
 
@@ -43,7 +44,7 @@ class MeinHotspotLoginStrategy(LoginStrategyType):
         ]
         for message in error_messages:
             if message in result:
-                print(message)
+                print("%s%s%s" % (Fore.RED, message, Fore.RESET))
                 return False
 
         debugprint(result)
