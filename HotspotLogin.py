@@ -1,10 +1,10 @@
 from colorama import Fore
 
 from Tools import Tools
-from DefaultLoginStrategy import DefaultLoginStrategy
-from BooksAndBagelsLoginStrategy import BooksAndBagelsLoginStrategy
-from MeinHotspotLoginStrategy import MeinHotspotLoginStrategy
-from DeutscheBahnICELoginStrategy import DeutscheBahnICELoginStrategy
+from strategies.DefaultLoginStrategy import DefaultLoginStrategy
+from strategies.BooksAndBagelsLoginStrategy import BooksAndBagelsLoginStrategy
+from strategies.MeinHotspotLoginStrategy import MeinHotspotLoginStrategy
+from strategies.DeutscheBahnICELoginStrategy import DeutscheBahnICELoginStrategy
 
 
 # FIXME: Not cool, I guess

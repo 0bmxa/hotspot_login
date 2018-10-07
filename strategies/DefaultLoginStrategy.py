@@ -21,6 +21,9 @@ class DefaultLoginStrategy(LoginStrategyType):
         (status, head, body) = tools.send_HTTP_request('GET', host_IP, '/', headers, None)
         location = [field[1] for field in head if field[0] == 'Location']
         if len(location) < 1:
+            # debugprint(status)
+            # debugprint(head)
+            # debugprint(body)
             print("No captive portal found.")
             return True
 

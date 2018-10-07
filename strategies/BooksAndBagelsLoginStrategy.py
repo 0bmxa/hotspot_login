@@ -1,6 +1,6 @@
 import datetime
 
-from MeinHotspotLoginStrategy import MeinHotspotLoginStrategy
+from strategies.MeinHotspotLoginStrategy import MeinHotspotLoginStrategy
 
 
 class BooksAndBagelsLoginStrategy(MeinHotspotLoginStrategy):
